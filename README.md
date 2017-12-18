@@ -4,12 +4,6 @@ Openpose implementation using darknet framework
 <b>[Openpose] (official repository)</b><p>
 https://github.com/CMU-Perceptual-Computing-Lab/openpose
 
-<b>[EasyOpenPose] (simplified, compressed to one source file)</b><p>
-https://github.com/dlunion/EasyOpenPose
-
-<b>[Paper] (show net structure, explain PAFs, buttom-up and greedy algorithm)</b><p>
-https://arxiv.org/abs/1611.08050
-
 <b>[Darknet]</b><p>
 https://github.com/pjreddie/darknet
 
