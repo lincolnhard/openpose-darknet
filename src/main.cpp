@@ -392,75 +392,82 @@ void connect_bodyparts
 
 void find_heatmap_peaks
     (
-    float *map,
-    float *_peaks,
-    int mapw,
-    int maph,
-    int mapc,
-    float threshold
+    const float *src,
+    float *dst,
+    const int SRCW,
+    const int SRCH,
+    const int SRC_CH,
+    const float TH
     )
 {
-    float *peaks = _peaks;
-    int map_offset = mapw * maph;
-    int peaks_offset = 3 * (POSE_MAX_PEOPLE + 1);
-    for (int c = 0; c < mapc; ++c)
+    // find peaks (8-connected neighbor), weights with 7 by 7 area to get sub-pixel location and response
+    const int SRC_PLANE_OFFSET = SRCW * SRCH;
+    // add 1 for saving total people count, 3 for x, y, score
+    const int DST_PLANE_OFFSET = (POSE_MAX_PEOPLE + 1) * 3;
+    float *dstptr = dst;
+    int c = 0;
+    int x = 0;
+    int y = 0;
+    int i = 0;
+    int j = 0;
+    // TODO: reduce multiplication by using pointer
+    for(c = 0; c < SRC_CH - 1; ++c)
         {
-        int num_peaks = 0;
-        for (int y = 1; y < maph - 1 && num_peaks != POSE_MAX_PEOPLE; ++y)
+        int num_people = 0;
+        for(y = 1; y < SRCH - 1 && num_people != POSE_MAX_PEOPLE; ++y)
             {
-            for (int x = 1; x < mapw - 1 && num_peaks != POSE_MAX_PEOPLE; ++x)
+            for(x = 1; x < SRCW - 1 && num_people != POSE_MAX_PEOPLE; ++x)
                 {
-                float value = map[y*mapw + x];
-                if (value > threshold)
+                int idx  = y * SRCW + x;
+                float value = src[idx];
+                if (value > TH)
                     {
-                    const float topLeft = map[(y - 1)*mapw + x - 1];
-                    const float top = map[(y - 1)*mapw + x];
-                    const float topRight = map[(y - 1)*mapw + x + 1];
-                    const float left = map[y*mapw + x - 1];
-                    const float right = map[y*mapw + x + 1];
-                    const float bottomLeft = map[(y + 1)*mapw + x - 1];
-                    const float bottom = map[(y + 1)*mapw + x];
-                    const float bottomRight = map[(y + 1)*mapw + x + 1];
-                    if (value > topLeft && value > top &&
-                        value > topRight && value > left &&
-                        value > right && value > bottomLeft &&
-                        value > bottom && value > bottomRight)
+                    const float TOPLEFT = src[idx - SRCW - 1];
+                    const float TOP = src[idx - SRCW];
+                    const float TOPRIGHT = src[idx - SRCW + 1];
+                    const float LEFT = src[idx - 1];
+                    const float RIGHT = src[idx + 1];
+                    const float BUTTOMLEFT = src[idx + SRCW - 1];
+                    const float BUTTOM = src[idx + SRCW];
+                    const float BUTTOMRIGHT = src[idx + SRCW + 1];
+                    if(value > TOPLEFT && value > TOP && value > TOPRIGHT && value > LEFT &&
+                       value > RIGHT && value > BUTTOMLEFT && value > BUTTOM && value > BUTTOMRIGHT)
                         {
-                        float xAcc = 0;
-                        float yAcc = 0;
-                        float scoreAcc = 0;
-                        for (int kx = -3; kx <= 3; ++kx)
+                        float x_acc = 0;
+                        float y_acc = 0;
+                        float score_acc = 0;
+                        for (i = -3; i <= 3; ++i)
                             {
-                            int ux = x + kx;
-                            if (ux >= 0 && ux < mapw)
+                            int ux = x + i;
+                            if (ux >= 0 && ux < SRCW)
                                 {
-                                for (int ky = -3; ky <= 3; ++ky)
+                                for (j = -3; j <= 3; ++j)
                                     {
-                                    int uy = y + ky;
-                                    if (uy >= 0 && uy < maph)
+                                    int uy = y + j;
+                                    if (uy >= 0 && uy < SRCH)
                                         {
-                                        float score = map[uy * mapw + ux];
-                                        xAcc += ux * score;
-                                        yAcc += uy * score;
-                                        scoreAcc += score;
+                                        float score = src[uy * SRCW + ux];
+                                        x_acc += ux * score;
+                                        y_acc += uy * score;
+                                        score_acc += score;
                                         }
                                     }
                                 }
                             }
-                        xAcc /= scoreAcc;
-                        yAcc /= scoreAcc;
-                        scoreAcc = value;
-                        peaks[(num_peaks + 1) * 3 + 0] = xAcc;
-                        peaks[(num_peaks + 1) * 3 + 1] = yAcc;
-                        peaks[(num_peaks + 1) * 3 + 2] = scoreAcc;
-                        ++num_peaks;
+                        x_acc /= score_acc;
+                        y_acc /= score_acc;
+                        score_acc = value;
+                        dstptr[(num_people + 1) * 3 + 0] = x_acc;
+                        dstptr[(num_people + 1) * 3 + 1] = y_acc;
+                        dstptr[(num_people + 1) * 3 + 2] = score_acc;
+                        ++num_people;
                         }
                     }
                 }
             }
-        peaks[0] = num_peaks;
-        map += map_offset;
-        peaks += peaks_offset;
+        dstptr[0] = num_people;
+        src += SRC_PLANE_OFFSET;
+        dstptr += DST_PLANE_OFFSET;
         }
 }
 
@@ -541,7 +548,10 @@ int main
     split(netim, input_channels);
 
     // 6. feed forward
+    double time_begin = getTickCount();
     float *netoutdata = run_net(netin_data);
+    double fee_time = (getTickCount() - time_begin) / getTickFrequency() * 1000;
+    cout << "forward fee: " << fee_time << "ms" << endl;
 
     // 7. resize net output back to input size to get heatmap
     float *heatmap = new float[net_inw * net_inh * NET_OUT_CHANNELS];
