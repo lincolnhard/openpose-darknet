@@ -1,7 +1,7 @@
 # openpose-darknet
 Openpose implementation using darknet framework
 
-<b>[Openpose] (official repository)</b><p>
+<b>[Openpose]</b><p>
 https://github.com/CMU-Perceptual-Computing-Lab/openpose
 
 <b>[Darknet]</b><p>
