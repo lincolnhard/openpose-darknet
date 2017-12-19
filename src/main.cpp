@@ -563,7 +563,7 @@ int main
         }
 
     // 8. get heatmap peaks
-    float *heatmap_peaks = new float[3 * (POSE_MAX_PEOPLE+1) * 56];
+    float *heatmap_peaks = new float[3 * (POSE_MAX_PEOPLE+1) * (NET_OUT_CHANNELS-1)];
     find_heatmap_peaks(heatmap, heatmap_peaks, net_inw, net_inh, NET_OUT_CHANNELS, 0.05);
 
     // 9. link parts
