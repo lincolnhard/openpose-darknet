@@ -17,13 +17,12 @@ https://drive.google.com/open?id=1BfY0Hx2d2nm3I4JFh0W1cK2aHD1FSGea
   
 <b>[Usage]</b><p>
 ```Bash
-./openpose-darknet [image file] [cfg file] [weight file] [net input width] [net input height]
+./openpose-darknet [image file] [cfg file] [weight file]
 #example
-./openpose-darknet person.jpg openpose.cfg openpose.weight 200 200
+./openpose-darknet person.jpg openpose.cfg openpose.weight
 ```
 
 <b>[note]</b><p>
 1. Darknet version openpose.cfg and openpose.weight are ported from COCO version 
   pose_deploy_linevec.prototxt and pose_iter_440000.caffemodel.
-2. The argument [net input width] [net input height] should be <b>exactly the same </b>as 
-  the net width, net height in openpose.cfg.
+2. You could change net input width, height in openpose.cfg.
