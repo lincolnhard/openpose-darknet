@@ -1,17 +1,30 @@
 #include <darknet.h>
 
-float *run_net
+static network *net;
+
+void init_net
     (
     char *cfgfile,
     char *weightfile,
-    float *indata,
+    int *inw,
+    int *inh,
     int *outw,
     int *outh
     )
 {
-    network *net = load_network(cfgfile, weightfile, 0);
+    net = load_network(cfgfile, weightfile, 0);
     set_batch_network(net, 1);
+    *inw = net->w;
+    *inh = net->h;
     *outw = net->layers[net->n - 2].out_w;
     *outh = net->layers[net->n - 2].out_h;
-    return network_predict(net, indata);
+}
+
+float *run_net
+    (
+    float *indata
+    )
+{
+    network_predict(net, indata);
+    return net->output;
 }

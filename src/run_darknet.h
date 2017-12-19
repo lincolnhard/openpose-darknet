@@ -4,15 +4,20 @@
 extern "C"
 {
 
-float *run_net
+void init_net
     (
     char *cfgfile,
     char *weightfile,
-    float *indata,
+    int *inw,
+    int *inh,
     int *outw,
     int *outh
     );
 
+float *run_net
+    (
+    float *indata
+    );
 
 }
 #endif // RUN_DARKNET_H
